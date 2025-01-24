@@ -1,26 +1,33 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
-    namespace = "com.github.malikshairali.nativehtml"
+    namespace = "com.github.malikshairali.nativehtmldemo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.github.malikshairali.nativehtml"
+        applicationId = "com.github.malikshairali.nativehtmldemo"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -30,14 +37,23 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        compose = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
-dependencies {
+//composeCompiler {
+//    enableStrongSkippingMode = true
+//}
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+dependencies {
+    implementation(libs.androidx.activity.compose)
+//    implementation(platform(libs.compose.bom))
+    implementation(libs.androidx.material3)
+    implementation(project(":nativehtml"))
 }
