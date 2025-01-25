@@ -294,7 +294,6 @@ data class Mark(val text: String) : HTMLElement() {
     override fun toCompose(): @Composable () -> Unit = {
         Text(
             text = text,
-            color = Color.Yellow,
             modifier = Modifier.background(Color.Yellow)
         )
     }
