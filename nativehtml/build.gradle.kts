@@ -36,8 +36,8 @@ android {
 dependencies {
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
-
-    // Material Design 3
     implementation(libs.androidx.material3)
     implementation(libs.jsoup)
+    implementation(libs.coil)
+    implementation(libs.coil.network)
 }

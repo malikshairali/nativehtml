@@ -47,13 +47,7 @@ android {
     }
 }
 
-//composeCompiler {
-//    enableStrongSkippingMode = true
-//}
-
 dependencies {
     implementation(libs.androidx.activity.compose)
-//    implementation(platform(libs.compose.bom))
-    implementation(libs.androidx.material3)
     implementation(project(":nativehtml"))
 }

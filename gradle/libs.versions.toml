@@ -7,15 +7,15 @@ appcompat = "1.7.0"
 composeBom = "2024.12.01"
 lifecycleRuntimeKtx = "2.8.2"
 activityCompose = "1.9.3"
+coil = "3.0.4"
 
 [libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 compose-bom = {group = "androidx.compose", name="compose-bom", version.ref = "composeBom"}
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+coil = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil"}
+coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version = "3.0.4" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
