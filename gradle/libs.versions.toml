@@ -2,24 +2,28 @@
 kotlin = "2.0.0"
 agp = "8.4.1"
 jsoup = "1.18.3"
-coreKtx = "1.15.0"
-appcompat = "1.7.0"
 composeBom = "2024.12.01"
-lifecycleRuntimeKtx = "2.8.2"
 activityCompose = "1.9.3"
 coil = "3.0.4"
 
 [libraries]
+# Compose and Material
 androidx-material3 = { module = "androidx.compose.material3:material3" }
-compose-bom = {group = "androidx.compose", name="compose-bom", version.ref = "composeBom"}
-jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-coil = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil"}
+
+# HTML parsing
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+
+# Image Loading (Coil)
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version = "3.0.4" }
+
+[bundles]
+coil = ["coil-compose", "coil-network"]
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-

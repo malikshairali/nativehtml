@@ -38,6 +38,5 @@ dependencies {
     implementation(composeBom)
     implementation(libs.androidx.material3)
     implementation(libs.jsoup)
-    implementation(libs.coil)
-    implementation(libs.coil.network)
+    implementation(libs.bundles.coil)
 }
