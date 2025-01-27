@@ -3,6 +3,7 @@ package com.github.malikshairali.nativehtml
 import com.github.malikshairali.nativehtml.model.Anchor
 import com.github.malikshairali.nativehtml.model.Blockquote
 import com.github.malikshairali.nativehtml.model.BoldText
+import com.github.malikshairali.nativehtml.model.Div
 import com.github.malikshairali.nativehtml.model.EmphasizedText
 import com.github.malikshairali.nativehtml.model.HTMLElement
 import com.github.malikshairali.nativehtml.model.Heading
@@ -21,6 +22,7 @@ import com.github.malikshairali.nativehtml.model.TableCell
 import com.github.malikshairali.nativehtml.model.TableRow
 import com.github.malikshairali.nativehtml.model.TextNode
 import com.github.malikshairali.nativehtml.model.UnorderedList
+import com.github.malikshairali.nativehtml.model.UnsupportedHtml
 import org.jsoup.Jsoup
 
 class HTMLParser {
@@ -31,6 +33,7 @@ class HTMLParser {
 
     private fun parseElement(element: org.jsoup.nodes.Element): List<HTMLElement> {
         return when (element.tagName()) {
+            "div" -> listOf(Div(parseChildren(element)))
             "h1" -> listOf(Heading(1, element.text()))
             "h2" -> listOf(Heading(2, element.text()))
             "h3" -> listOf(Heading(3, element.text()))
@@ -75,7 +78,7 @@ class HTMLParser {
             "mark" -> listOf(Mark(element.text()))
             "sub" -> listOf(Subscript(element.text()))
             "sup" -> listOf(Superscript(element.text()))
-            else -> emptyList() // Unsupported tags
+            else -> listOf(UnsupportedHtml(element.outerHtml())) // Unsupported tags
         }
     }
 

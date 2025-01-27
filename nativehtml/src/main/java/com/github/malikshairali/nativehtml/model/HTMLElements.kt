@@ -1,7 +1,11 @@
 package com.github.malikshairali.nativehtml.model
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -37,6 +43,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -79,10 +86,7 @@ data class TextNode(val text: String) : HTMLElement() {
     }
 
     override fun toCompose(): @Composable () -> Unit = {
-        Text(
-            text = text,
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-        )
+        Text(text = text)
     }
 }
 
@@ -320,6 +324,45 @@ data class Superscript(val text: String) : HTMLElement() {
             fontSize = 12.sp,
             style = TextStyle(baselineShift = BaselineShift.Superscript)
         )
+    }
+}
+
+data class Div(val children: List<HTMLElement>) : HTMLElement() {
+    override fun toCompose(): @Composable () -> Unit = {
+        Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+            children.forEach { child ->
+                child.toCompose().invoke()
+            }
+        }
+    }
+}
+
+
+data class UnsupportedHtml(val rawHtml: String) : HTMLElement() {
+    @SuppressLint("SetJavaScriptEnabled")
+    override fun toCompose(): @Composable () -> Unit = {
+        Surface(modifier = Modifier.fillMaxWidth()) {
+            AndroidView(
+                factory = { context ->
+                    WebView(context).apply {
+                        webViewClient = WebViewClient() // Keeps navigation within WebView
+                        settings.javaScriptEnabled = true
+                        settings.mediaPlaybackRequiresUserGesture = false // Auto-play videos
+                        settings.cacheMode = WebSettings.LOAD_DEFAULT
+                        loadDataWithBaseURL(
+                            null,
+                            rawHtml,
+                            "text/html",
+                            "UTF-8",
+                            null
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            )
+        }
     }
 }
 
