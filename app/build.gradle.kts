@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.github.malikshairali.nativehtmldemo"
+    namespace = "io.github.malikshairali.nativehtmldemo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.github.malikshairali.nativehtmldemo"
+        applicationId = "io.github.malikshairali.nativehtmldemo"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

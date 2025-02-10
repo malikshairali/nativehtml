@@ -1,4 +1,4 @@
-package com.github.malikshairali.nativehtml.model
+package io.github.malikshairali.nativehtml.model
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -47,8 +46,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.github.malikshairali.nativehtml.HtmlTagHandler
-import com.github.malikshairali.nativehtml.style.HeadingStyleRegistry
+import io.github.malikshairali.nativehtml.HtmlTagHandler
+import io.github.malikshairali.nativehtml.style.HeadingStyleRegistry
 import org.jsoup.nodes.Element
 
 sealed class HTMLElement {

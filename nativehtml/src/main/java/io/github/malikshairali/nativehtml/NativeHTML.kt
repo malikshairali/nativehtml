@@ -1,4 +1,4 @@
-package com.github.malikshairali.nativehtml
+package io.github.malikshairali.nativehtml
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn

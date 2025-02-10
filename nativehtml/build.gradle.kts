@@ -5,13 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "com.github.malikshairali.nativehtml"
+    namespace = "io.github.malikshairali.nativehtml"
     compileSdk = 34
 
     defaultConfig {
         minSdk = 24
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 

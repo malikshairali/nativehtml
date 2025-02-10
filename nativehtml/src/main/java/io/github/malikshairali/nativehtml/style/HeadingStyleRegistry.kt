@@ -1,4 +1,4 @@
-package com.github.malikshairali.nativehtml.style
+package io.github.malikshairali.nativehtml.style
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
