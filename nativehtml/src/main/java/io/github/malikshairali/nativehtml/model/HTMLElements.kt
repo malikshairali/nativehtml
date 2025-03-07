@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,9 +47,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import io.github.malikshairali.nativehtml.HtmlTagHandler
 import io.github.malikshairali.nativehtml.style.HeadingStyleRegistry
-import org.jsoup.nodes.Element
 
 sealed class HTMLElement {
     abstract fun toCompose(): @Composable () -> Unit
@@ -165,12 +164,24 @@ data class Blockquote(val text: String) : HTMLElement() {
     }
 
     override fun toCompose(): @Composable () -> Unit = {
-        Text(
-            text = text,
-            fontStyle = FontStyle.Italic,
-            modifier = Modifier.padding(8.dp),
-            color = Color.Gray
-        )
+        Row(
+            modifier = Modifier
+                .height(IntrinsicSize.Max)
+                .padding(vertical = 8.dp, horizontal = 16.dp)
+        ) {
+            Spacer(
+                modifier = Modifier
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .background(Color.LightGray)
+            )
+            Text(
+                text = text,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.padding(start = 8.dp),
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -228,7 +239,7 @@ data class Image(val src: String?, val alt: String) : HTMLElement() {
             model = ImageRequest.Builder(LocalContext.current).data(src).crossfade(true).build(),
             contentScale = ContentScale.Crop,
             contentDescription = alt,
-            modifier = Modifier.fillMaxSize().padding(8.dp)
+            modifier = Modifier.fillMaxSize()//.padding(8.dp)
         )
     }
 }
@@ -271,9 +282,11 @@ data class Span(val children: List<HTMLElement>) : HTMLElement() {
     }
 
     override fun toCompose(): @Composable () -> Unit = {
-        Row {
-            children.forEach { it.toCompose().invoke() }
-        }
+        Text(
+            text = buildAnnotatedString {
+                children.forEach { it.appendToBuilder(this) }
+            }
+        )
     }
 }
 
@@ -328,7 +341,7 @@ data class Superscript(val text: String) : HTMLElement() {
 
 data class Div(val children: List<HTMLElement>) : HTMLElement() {
     override fun toCompose(): @Composable () -> Unit = {
-        Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             children.forEach { child ->
                 child.toCompose().invoke()
             }
@@ -357,22 +370,8 @@ data class UnsupportedHtml(val rawHtml: String) : HTMLElement() {
                         )
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
-}
-
-
-class HeadlineTagHandler() : HtmlTagHandler {
-    override fun handle(element: Element): HTMLElement {
-        return Heading(element.tagName().substring(1).toInt(), element.text())
-    }
-
-    override fun canHandle(tagName: String): Boolean {
-        return tagName.contains("h")
-    }
-
 }

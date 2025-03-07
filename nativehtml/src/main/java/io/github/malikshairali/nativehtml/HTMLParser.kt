@@ -41,7 +41,7 @@ class HTMLParser {
             "h5" -> listOf(Heading(5, element.text()))
             "h6" -> listOf(Heading(6, element.text()))
             "p" -> listOf(Paragraph(parseChildren(element)))
-            "strong", "b" -> listOf(BoldText(element.text()))
+            "strong", "b" -> listOf(BoldText(element.textNodes().joinToString { it.text() }))
             "a" -> listOf(Anchor(element.attr("href"), element.text()))
             "code" -> listOf(InlineCode(element.text()))
             "em" -> listOf(EmphasizedText(element.text()))

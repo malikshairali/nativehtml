@@ -3,7 +3,7 @@ package com.github.malikshairali.nativehtmldemo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.github.malikshairali.nativehtml.RenderHtml
+import io.github.malikshairali.nativehtml.RenderHtml
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
