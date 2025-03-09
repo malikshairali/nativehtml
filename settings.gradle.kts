@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Native Html Compose"
+rootProject.name = "native-html"
 include(":app")
 include(":nativehtml")
