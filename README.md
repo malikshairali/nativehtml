@@ -19,7 +19,6 @@ Easily render HTML tags as native **Composable UI components**, including **text
 ✅ **Nested Lists, Tables, and Blockquotes**  
 ✅ **Hyperlinks with Click Support**  
 ✅ **WebView for Unsupported Elements** (`<video>`, `<iframe>`)  
-✅ **Fully Composable & Extensible**
 
 ---
 
@@ -39,7 +38,7 @@ Then, add the dependency in your **app module**:
 
 ```kotlin
 dependencies {
-    implementation("io.github.malikshairali:nativehtml:0.0.1")
+    implementation("io.github.malikshairali:nativehtml:0.0.2")
 }
 ```
 
@@ -100,14 +99,6 @@ RenderHtml(
 HeadingStyleRegistry.setStyle(1, TextStyle(fontSize = 24.sp, fontWeight = FontWeight.ExtraBold))
 ```
 
-### **🔹 Handle Click Events for Links**
-```kotlin
-RenderHtml(
-    html = "<a href='https://example.com'>Click me</a>",
-    onLinkClick = { url -> openCustomWebView(url) }
-)
-```
-
 ---
 
 ## **📜 Supported HTML Tags**
@@ -126,6 +117,7 @@ RenderHtml(
 | `<table>`, `<tr>`, `<td>` | Table support |
 | `<video>` | WebView-based video rendering |
 | `<div>` | Block container |
+| `<iframe>`, `<embed>` | WebView fallback rendering |
 
 ---
 
@@ -150,5 +142,3 @@ Copyright (c) 2024 Malik Shair Ali
 **Pull requests are welcome!** Feel free to [open an issue](https://github.com/malikshairali/nativehtml/issues) for feature requests or bug reports.
 
 ---
-
-This README provides all necessary details about your library in a **clean, structured, and developer-friendly format**. 🚀
