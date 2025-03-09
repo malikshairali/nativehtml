@@ -1,7 +1,3 @@
-Here's a well-structured **README.md** for your `NativeHTML` library:  
-
----
-
 ### **📜 NativeHTML - Convert HTML to Jetpack Compose UI**  
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.malikshairali/nativehtml)](https://central.sonatype.com/artifact/io.github.malikshairali/native-html)  
