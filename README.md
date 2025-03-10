@@ -1,6 +1,6 @@
 ### **📜 NativeHTML - Convert HTML to Jetpack Compose UI**  
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.malikshairali/nativehtml)](https://central.sonatype.com/artifact/io.github.malikshairali/native-html)  
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.malikshairali/native-html)](https://central.sonatype.com/artifact/io.github.malikshairali/native-html)  
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](https://opensource.org/licenses/Apache-2.0)  
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Supported-brightgreen)](https://developer.android.com/jetpack/compose)  
 
