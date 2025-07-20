@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
 android {
@@ -30,6 +31,10 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+}
+
+signing {
+    useGpgCmd()
 }
 
 dependencies {
