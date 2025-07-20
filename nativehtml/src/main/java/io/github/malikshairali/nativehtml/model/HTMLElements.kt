@@ -37,103 +37,73 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import io.github.malikshairali.nativehtml.style.HeadingStyleRegistry
 
 sealed class HTMLElement {
-    abstract fun toCompose(): @Composable () -> Unit
-    open fun appendToBuilder(builder: AnnotatedString.Builder) {}
+    @Composable
+    abstract fun render()
 }
 
-// Heading tags
-data class Heading(val level: Int, val text: String) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+interface InlineHTMLElement {
+    fun appendToBuilder(builder: AnnotatedString.Builder)
+}
+
+data class TextElement(
+    val text: String,
+    val href: String? = null,
+    val style: TextStyle
+) : HTMLElement(), InlineHTMLElement {
+    override fun appendToBuilder(builder: AnnotatedString.Builder) {
+        if (href == null) {
+            builder.withStyle(style.toSpanStyle()) {
+                append(text)
+            }
+        } else {
+            builder.apply {
+                val tag = "URL"
+                pushStringAnnotation(tag, href)
+                withLink(LinkAnnotation.Url(url = href)) {
+                    withStyle(
+                        SpanStyle(
+                            color = Color.Blue, textDecoration = TextDecoration.Underline
+                        )
+                    ) {
+                        append(text)
+                    }
+                }
+                pop()
+            }
+        }
+    }
+
+    @Composable
+    override fun render() {
+        val context = LocalContext.current
         Text(
             text = text,
-            style = HeadingStyleRegistry.getStyle(level),
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
+            style = style,
+            modifier = Modifier.then(
+                href?.let { url ->
+                    Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(intent)
+                    }
+                } ?: Modifier
+            )
         )
     }
 }
 
-// Paragraph tag
-data class Paragraph(val children: List<HTMLElement>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(
-            text = buildAnnotatedString {
-                children.forEach { it.appendToBuilder(this) }
-            },
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-        )
-    }
-}
-
-// Text node
-data class TextNode(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.append(text)
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(text = text)
-    }
-}
-
-// Strong or bold text
-data class BoldText(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-            append(text)
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(text = text, fontWeight = FontWeight.Bold)
-    }
-}
-
-// Anchor (link)
-data class Anchor(val href: String?, val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.apply {
-            val tag = "URL"
-            pushStringAnnotation(tag, href ?: "")
-            withLink(LinkAnnotation.Url(url = href ?: "")) {
-                withStyle(
-                    SpanStyle(
-                        color = Color.Blue, textDecoration = TextDecoration.Underline
-                    )
-                ) {
-                    append(text)
-                }
-            }
-            pop()
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        val context = LocalContext.current
-        Text(text = text, color = Color.Blue, modifier = Modifier.clickable {
-            href?.let { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                context.startActivity(intent)
-            }
-        })
-    }
-}
-
-// Inline code
 data class InlineCode(val text: String) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Text(
             text = text,
             fontFamily = FontFamily.Monospace,
@@ -142,28 +112,9 @@ data class InlineCode(val text: String) : HTMLElement() {
     }
 }
 
-// Emphasized text
-data class EmphasizedText(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
-            append(text)
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(text = text, fontStyle = FontStyle.Italic)
-    }
-}
-
-// Blockquote
 data class Blockquote(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.withStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Color.Gray)) {
-            append(text)
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Row(
             modifier = Modifier
                 .height(IntrinsicSize.Max)
@@ -185,82 +136,84 @@ data class Blockquote(val text: String) : HTMLElement() {
     }
 }
 
-// List item
 data class ListItem(val children: List<HTMLElement>) : HTMLElement() {
     @OptIn(ExperimentalLayoutApi::class)
-    override fun toCompose(): @Composable () -> Unit = {
-        Row(modifier = Modifier.fillMaxWidth().padding(start = 8.dp)) {
-            Text(
-                text = "•", // Bullet point
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(end = 8.dp) // Space between bullet and content
-            )
-            FlowRow {
-                children.forEach { it.toCompose().invoke() }
-            }
+    @Composable
+    override fun render() {
+        FlowRow(modifier = Modifier.fillMaxWidth()) {
+            children.forEach { it.render() }
         }
     }
 }
 
-// Unordered list
 data class UnorderedList(val items: List<HTMLElement>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            items.forEach { item -> item.toCompose().invoke() }
-        }
-    }
-}
-
-// Ordered list
-data class OrderedList(val items: List<HTMLElement>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
-        Column(modifier = Modifier.padding(start = 16.dp)) {
-            items.forEachIndexed { index, item ->
+            items.forEach { item ->
                 Row {
-                    Text("${index + 1}. ", fontWeight = FontWeight.Bold)
-                    item.toCompose().invoke() // Each item is a ListItem
+                    Text(
+                        text = "• ", // Bullet point
+                        fontWeight = FontWeight.Bold,
+                    )
+                    item.render()
                 }
             }
         }
     }
 }
 
-// Line break
-data object LineBreak : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
-        Spacer(modifier = Modifier.height(8.dp))
+data class OrderedList(val items: List<HTMLElement>) : HTMLElement() {
+    @Composable
+    override fun render() {
+        Column(modifier = Modifier.padding(start = 16.dp)) {
+            items.forEachIndexed { index, item ->
+                Row {
+                    Text("${index + 1}. ", fontWeight = FontWeight.Bold)
+                    item.render()
+                }
+            }
+        }
     }
 }
 
-// Image tag
+data object LineBreak : HTMLElement() {
+    @Composable
+    override fun render() {
+        Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
 data class Image(val src: String?, val alt: String) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current).data(src).crossfade(true).build(),
             contentScale = ContentScale.Crop,
             contentDescription = alt,
-            modifier = Modifier.fillMaxSize()//.padding(8.dp)
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
 
-// Table elements
 data class Table(val rows: List<TableRow>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-            rows.forEach { it.toCompose().invoke() }
+            rows.forEach { it.render() }
         }
     }
 }
 
 data class TableRow(val cells: List<TableCell>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
             cells.forEach { cell ->
                 Box(
                     modifier = Modifier.weight(1f).fillMaxHeight().border(1.dp, Color.Gray)
                 ) {
-                    cell.toCompose().invoke()
+                    cell.render()
                 }
             }
         }
@@ -268,82 +221,80 @@ data class TableRow(val cells: List<TableCell>) : HTMLElement() {
 }
 
 data class TableCell(val children: List<HTMLElement>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Row(modifier = Modifier.padding(8.dp)) {
-            children.forEach { it.toCompose().invoke() }
+            children.forEach { it.render() }
         }
     }
 }
 
-// Span
-data class Span(val children: List<HTMLElement>) : HTMLElement() {
+data class Paragraph(
+    val children: List<HTMLElement>,
+    val style: TextStyle
+) : HTMLElement() {
+    @Composable
+    override fun render() {
+        var textBuilder = AnnotatedString.Builder()
+
+        children.forEach { child ->
+            if (child is InlineHTMLElement) {
+                child.appendToBuilder(textBuilder)
+            } else {
+                Text(
+                    text = textBuilder.toAnnotatedString(),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    style = style
+                )
+                child.render()
+                textBuilder = AnnotatedString.Builder()
+            }
+        }
+
+        if (textBuilder.length != 0) {
+            Text(
+                text = textBuilder.toAnnotatedString(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                style = style
+            )
+        }
+    }
+}
+
+data class Span(
+    val children: List<HTMLElement>,
+    val style: TextStyle = TextStyle()
+) : HTMLElement(), InlineHTMLElement {
     override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        children.forEach { it.appendToBuilder(builder) }
+        children.forEach { child ->
+            if (child is InlineHTMLElement) {
+                child.appendToBuilder(builder)
+            }
+        }
     }
 
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Text(
             text = buildAnnotatedString {
-                children.forEach { it.appendToBuilder(this) }
-            }
+                children.forEach { child ->
+                    if (child is InlineHTMLElement) {
+                        child.appendToBuilder(this)
+                    }
+                }
+            },
+            style = style
         )
     }
 }
 
-// Mark
-data class Mark(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.withStyle(SpanStyle(color = Color.Yellow)) {
-            append(text)
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(
-            text = text, modifier = Modifier.background(Color.Yellow)
-        )
-    }
-}
-
-// Subscript
-data class Subscript(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.withStyle(SpanStyle(baselineShift = BaselineShift.Subscript)) {
-            append(text)
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            style = TextStyle(baselineShift = BaselineShift.Subscript)
-        )
-    }
-}
-
-// Superscript
-data class Superscript(val text: String) : HTMLElement() {
-    override fun appendToBuilder(builder: AnnotatedString.Builder) {
-        builder.withStyle(SpanStyle(baselineShift = BaselineShift.Superscript)) {
-            append(text)
-        }
-    }
-
-    override fun toCompose(): @Composable () -> Unit = {
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            style = TextStyle(baselineShift = BaselineShift.Superscript)
-        )
-    }
-}
 
 data class Div(val children: List<HTMLElement>) : HTMLElement() {
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Column(modifier = Modifier.fillMaxWidth()) {
             children.forEach { child ->
-                child.toCompose().invoke()
+                child.render()
             }
         }
     }
@@ -352,7 +303,8 @@ data class Div(val children: List<HTMLElement>) : HTMLElement() {
 
 data class UnsupportedHtml(val rawHtml: String) : HTMLElement() {
     @SuppressLint("SetJavaScriptEnabled")
-    override fun toCompose(): @Composable () -> Unit = {
+    @Composable
+    override fun render() {
         Surface(modifier = Modifier.fillMaxWidth()) {
             AndroidView(
                 factory = { context ->

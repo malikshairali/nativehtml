@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import io.github.malikshairali.nativehtml.parser.HTMLParser
 
 @Composable
 fun RenderHtml(
@@ -16,7 +17,7 @@ fun RenderHtml(
 
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(elements) { element ->
-            element.toCompose().invoke()
+            element.render()
         }
     }
 }
