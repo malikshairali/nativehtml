@@ -1,10 +1,10 @@
-### **📜 NativeHTML - Convert HTML to Jetpack Compose UI**  
+### **📜 NativeHTML - Convert HTML and CSS to Jetpack Compose UI**  
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.malikshairali/native-html)](https://central.sonatype.com/artifact/io.github.malikshairali/native-html)  
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.malikshairali/native-html)](https://central.sonatype.com/artifact/io.github.malikshairali/native-html/1.0.0)  
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](https://opensource.org/licenses/Apache-2.0)  
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Supported-brightgreen)](https://developer.android.com/jetpack/compose)  
 
-**NativeHTML** is an Android library that converts raw **HTML** into **Jetpack Compose UI**.  
+**NativeHTML** is an Android library that converts raw **HTML** and **CSS** into **Jetpack Compose UI**.  
 Easily render HTML tags as native **Composable UI components**, including **text, images, lists, tables, and more**.  
 
 ---
@@ -12,7 +12,9 @@ Easily render HTML tags as native **Composable UI components**, including **text
 ## **🚀 Features**
 ✅ **Convert HTML to Native Compose UI**  
 ✅ **Support for Common HTML Tags** (`<p>`, `<h1>`-`<h6>`, `<ul>`, `<ol>`, `<img>`, `<a>`, `<strong>`, `<em>`, etc.)  
-✅ **Nested Lists, Tables, and Blockquotes**  
+✅ **Support for inline CSS styles** (e.g., `style="color: red; font-weight: bold; text-align: center;"`)   
+✅ **Style customization via StyleRegistry**   
+✅ **Nested Lists, Tables, and Blockquotes**    
 ✅ **Hyperlinks with Click Support**  
 ✅ **WebView for Unsupported Elements** (`<video>`, `<iframe>`)  
 
@@ -34,7 +36,7 @@ Then, add the dependency in your **app module**:
 
 ```kotlin
 dependencies {
-    implementation("io.github.malikshairali:nativehtml:0.0.2")
+    implementation("io.github.malikshairali:nativehtml:1.0.0")
 }
 ```
 
@@ -90,10 +92,14 @@ RenderHtml(
 ---
 
 ## **🎨 Customization**
-### **🔹 Override Heading Styles**
+### **🔹 Override Tags Styles**
+
+You can override the default styles using `StyleRegistry.setStyle(tag, textStyle)`:
 ```kotlin
-HeadingStyleRegistry.setStyle(1, TextStyle(fontSize = 24.sp, fontWeight = FontWeight.ExtraBold))
+StyleRegistry.setStyle("h1", TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold))
 ```
+
+This allows full control over text appearance of elements like headings, italics, bold, links, and more.
 
 ---
 
@@ -117,9 +123,24 @@ HeadingStyleRegistry.setStyle(1, TextStyle(fontSize = 24.sp, fontWeight = FontWe
 
 ---
 
+## **🎨 Supported CSS Styles**
+| CSS Property        | Description                            |
+|---------------------|----------------------------------------|
+| `color`             | Sets the text color                    |
+| `background-color`  | Sets the background color              |
+| `font-weight`       | Controls boldness (`normal`, `bold`, `100`–`900`) |
+| `font-style`        | Italic style (`normal`, `italic`)      |
+| `font-size`         | Sets the font size (e.g., `16px`, `1.2em`) |
+| `font-family`       | Applies the font family                |
+| `text-align`        | Aligns text (`left`, `center`, `right`) |
+| `text-decoration`   | Underlines or strikes text (`underline`, `line-through`) |
+
+---
+
 ## **🔧 How It Works**
 - **Parses HTML using Jsoup**
 - **Maps HTML tags to Compose UI components**
+- **Map CSS styling for each HTML tag to TextStyle and passes on to individual render** 
 - **Uses `LazyColumn` for efficient rendering**
 - **Delegates unsupported elements (like `<video>`) to WebView**
 
@@ -128,7 +149,7 @@ HeadingStyleRegistry.setStyle(1, TextStyle(fontSize = 24.sp, fontWeight = FontWe
 ## **📄 License**
 ```
 Apache License 2.0
-Copyright (c) 2024 Malik Shair Ali
+Copyright (c) 2025 Malik Shair Ali
 ```
 [Read the full license](https://opensource.org/licenses/Apache-2.0).
 
