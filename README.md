@@ -36,7 +36,7 @@ Then, add the dependency in your **app module**:
 
 ```kotlin
 dependencies {
-    implementation("io.github.malikshairali:nativehtml:1.0.0")
+    implementation("io.github.malikshairali:native-html:1.0.0")
 }
 ```
 
