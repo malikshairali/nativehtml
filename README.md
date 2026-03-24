@@ -11,11 +11,11 @@ Easily render HTML tags as native **Composable UI components**, including **text
 
 ## **🚀 Features**
 ✅ **Convert HTML to Native Compose UI**  
-✅ **Support for Common HTML Tags** (`<p>`, `<h1>`-`<h6>`, `<ul>`, `<ol>`, `<img>`, `<a>`, `<strong>`, `<em>`, etc.)  
+✅ **Support for Common HTML Tags** (`<p>`, `<h1>`-`<h6>`, `<ul>`, `<ol>`, `<img>`, `<a>`, `<strong>`, `<em>`, `<small>`, `<pre>`, `<hr>`, `<th>`, etc.)  
 ✅ **Support for inline CSS styles** (e.g., `style="color: red; font-weight: bold; text-align: center;"`)   
 ✅ **Style customization via StyleRegistry**   
 ✅ **Nested Lists, Tables, and Blockquotes**    
-✅ **Hyperlinks with Click Support**  
+✅ **Hyperlinks with Click Support** (customizable with deep-link-first handling)  
 ✅ **WebView for Unsupported Elements** (`<video>`, `<iframe>`)  
 
 ---
@@ -47,6 +47,24 @@ dependencies {
 ```kotlin
 RenderHtml(
     html = "<p>Hello, <strong>world</strong>! Visit <a href='https://example.com'>this link</a>.</p>"
+)
+```
+
+### **🔹 Deep-Link-First URL Handling**
+```kotlin
+RenderHtml(
+    html = "<p>Open <a href='myapp://profile/42'>profile</a> or <a href='https://example.com'>website</a></p>",
+    onLinkClick = { url ->
+        val uri = Uri.parse(url)
+        val handledInApp = uri.scheme == "myapp"
+
+        if (handledInApp) {
+            // Route inside your app nav graph / deep-link router.
+            true
+        } else {
+            false // NativeHTML falls back to ACTION_VIEW.
+        }
+    }
 )
 ```
 
@@ -110,15 +128,19 @@ This allows full control over text appearance of elements like headings, italics
 | `<h1>` - `<h6>` | Headings |
 | `<strong>` / `<b>` | Bold text |
 | `<em>` / `<i>` | Italic text |
+| `<s>` / `<strike>` / `<del>` | Strikethrough text |
+| `<small>` | Smaller helper text |
 | `<a>` | Hyperlink with click support |
 | `<ul>`, `<ol>`, `<li>` | Lists |
 | `<img>` | Image rendering |
 | `<blockquote>` | Blockquote |
 | `<code>` | Monospace text |
+| `<pre>` | Preformatted multiline text |
 | `<sub>`, `<sup>` | Subscript & Superscript |
-| `<table>`, `<tr>`, `<td>` | Table support |
+| `<table>`, `<tr>`, `<th>`, `<td>` | Table support |
+| `<hr>` | Horizontal divider |
 | `<video>` | WebView-based video rendering |
-| `<div>` | Block container |
+| `<div>`, `<section>`, `<article>`, `<header>`, `<footer>`, `<nav>`, `<main>` | Block container |
 | `<iframe>`, `<embed>` | WebView fallback rendering |
 
 ---
@@ -128,17 +150,18 @@ This allows full control over text appearance of elements like headings, italics
 |---------------------|----------------------------------------|
 | `color`             | Sets the text color                    |
 | `background-color`  | Sets the background color              |
+| `background`        | Sets the background color              |
 | `font-weight`       | Controls boldness (`normal`, `bold`, `100`–`900`) |
 | `font-style`        | Italic style (`normal`, `italic`)      |
 | `font-size`         | Sets the font size (e.g., `16px`, `1.2em`) |
 | `font-family`       | Applies the font family                |
 | `text-align`        | Aligns text (`left`, `center`, `right`) |
-| `text-decoration`   | Underlines or strikes text (`underline`, `line-through`) |
+| `text-decoration`   | Underlines/strikes text (`underline`, `line-through`, combined values) |
 
 ---
 
 ## **🔧 How It Works**
-- **Parses HTML using Jsoup**
+- **Parses HTML using Jsoup** (planned parser abstraction for Ksoup/KMP in future phase)
 - **Maps HTML tags to Compose UI components**
 - **Map CSS styling for each HTML tag to TextStyle and passes on to individual render** 
 - **Uses `LazyColumn` for efficient rendering**

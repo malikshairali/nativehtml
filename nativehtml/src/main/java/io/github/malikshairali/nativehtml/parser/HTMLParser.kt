@@ -4,15 +4,18 @@ import androidx.compose.ui.text.TextStyle
 import io.github.malikshairali.nativehtml.model.Blockquote
 import io.github.malikshairali.nativehtml.model.Div
 import io.github.malikshairali.nativehtml.model.HTMLElement
+import io.github.malikshairali.nativehtml.model.HorizontalRule
 import io.github.malikshairali.nativehtml.model.Image
 import io.github.malikshairali.nativehtml.model.InlineCode
 import io.github.malikshairali.nativehtml.model.LineBreak
 import io.github.malikshairali.nativehtml.model.ListItem
 import io.github.malikshairali.nativehtml.model.OrderedList
 import io.github.malikshairali.nativehtml.model.Paragraph
+import io.github.malikshairali.nativehtml.model.PreformattedText
 import io.github.malikshairali.nativehtml.model.Span
 import io.github.malikshairali.nativehtml.model.Table
 import io.github.malikshairali.nativehtml.model.TableCell
+import io.github.malikshairali.nativehtml.model.TableHeaderCell
 import io.github.malikshairali.nativehtml.model.TableRow
 import io.github.malikshairali.nativehtml.model.TextElement
 import io.github.malikshairali.nativehtml.model.UnorderedList
@@ -78,7 +81,21 @@ class HTMLParser {
                 )
             )
 
+            "small" -> listOf(
+                TextElement(
+                    text = element.text(),
+                    style = style
+                )
+            )
+
             "u" -> listOf(
+                TextElement(
+                    text = element.text(),
+                    style = style
+                )
+            )
+
+            "s", "strike", "del" -> listOf(
                 TextElement(
                     text = element.text(),
                     style = style
@@ -106,7 +123,7 @@ class HTMLParser {
                 )
             )
 
-            "strong" -> listOf(
+            "b", "strong" -> listOf(
                 Span(
                     parseChildren(
                         element = element,
@@ -115,7 +132,7 @@ class HTMLParser {
                 )
             )
 
-            "em" -> listOf(
+            "i", "em" -> listOf(
                 Span(
                     parseChildren(
                         element = element,
@@ -140,6 +157,13 @@ class HTMLParser {
                 )
             )
 
+            "pre" -> listOf(
+                PreformattedText(
+                    text = element.wholeText(),
+                    style = style
+                )
+            )
+
             "span" -> listOf(
                 Span(
                     children = parseChildren(element, style),
@@ -161,7 +185,7 @@ class HTMLParser {
             "ol" -> listOf(OrderedList(element.children().flatMap { parseElement(it) }))
 
             "li" -> {
-                val children = parseChildren(element)
+                val children = parseChildren(element, style)
                 listOf(ListItem(children))
             }
 
@@ -175,20 +199,40 @@ class HTMLParser {
                 element.children().flatMap { parseElement(it) }
             }
 
+            "thead", "tfoot" -> {
+                element.children().flatMap { parseElement(it) }
+            }
+
             "tr" -> {
                 val cells =
-                    element.children().flatMap { parseElement(it) }.filterIsInstance<TableCell>()
+                    element.children().flatMap { parseElement(it) }.filter {
+                        it is TableCell || it is TableHeaderCell
+                    }
                 listOf(TableRow(cells))
             }
 
             "td" -> {
-                val children = parseChildren(element)
+                val children = parseChildren(element, style)
                 listOf(TableCell(children))
+            }
+
+            "th" -> {
+                val children = parseChildren(element, style)
+                listOf(TableHeaderCell(children))
             }
 
             "img" -> listOf(Image(element.attr("src"), element.attr("alt")))
 
-            "div" -> listOf(Div(parseChildren(element, style)))
+            "div", "section", "article", "header", "footer", "nav", "main" -> listOf(
+                Div(
+                    parseChildren(
+                        element,
+                        style
+                    )
+                )
+            )
+
+            "hr" -> listOf(HorizontalRule)
 
             else -> listOf(UnsupportedHtml(element.outerHtml())) // Unsupported tags
         }
@@ -225,9 +269,9 @@ class HTMLParser {
         return children
     }
 
-    private fun getTextStyle(tag: String, css: String?) : TextStyle {
+    private fun getTextStyle(tag: String, css: String?): TextStyle {
         val styleFromCss = CssParser.parse(css)
         val styleForTag = StyleRegistry.getStyle(tag)
-        return styleFromCss.merge(styleForTag)
+        return styleForTag.merge(styleFromCss)
     }
 }
