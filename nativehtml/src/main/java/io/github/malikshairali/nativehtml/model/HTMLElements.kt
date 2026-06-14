@@ -36,6 +36,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -146,22 +148,28 @@ data class InlineCode(val text: String) : HTMLElement() {
 data class Blockquote(val text: String) : HTMLElement() {
     @Composable
     override fun render() {
+        val accentColor = Color(0xFF9E9E9E)
+        val strokeWidth = 4.dp
         Row(
             modifier = Modifier
-                .height(IntrinsicSize.Max)
-                .padding(vertical = 8.dp, horizontal = 16.dp)
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
+                .drawBehind {
+                    val sw = strokeWidth.toPx()
+                    drawLine(
+                        color = accentColor,
+                        start = Offset(sw / 2f, 0f),
+                        end = Offset(sw / 2f, size.height),
+                        strokeWidth = sw
+                    )
+                }
+                .padding(start = strokeWidth + 10.dp, end = 8.dp)
         ) {
-            Spacer(
-                modifier = Modifier
-                    .width(2.dp)
-                    .fillMaxHeight()
-                    .background(Color.LightGray)
-            )
             Text(
                 text = text,
                 fontStyle = FontStyle.Italic,
-                modifier = Modifier.padding(start = 8.dp),
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF555555)
             )
         }
     }
