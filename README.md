@@ -138,7 +138,7 @@ This allows full control over text appearance of elements like headings, italics
 ---
 
 ## **🔧 How It Works**
-- **Parses HTML using Jsoup**
+- **Parses HTML using Ksoup**
 - **Maps HTML tags to Compose UI components**
 - **Map CSS styling for each HTML tag to TextStyle and passes on to individual render** 
 - **Uses `LazyColumn` for efficient rendering**
