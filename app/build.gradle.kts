@@ -48,6 +48,9 @@ android {
 }
 
 dependencies {
+    val composeBom = platform(libs.compose.bom)
+    implementation(composeBom)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material3)
     implementation(project(":nativehtml"))
 }
