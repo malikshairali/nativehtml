@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Native Html Compose</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">NativeHTML Demo</string>
 </resources>

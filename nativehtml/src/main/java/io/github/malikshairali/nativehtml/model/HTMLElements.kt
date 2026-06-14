@@ -21,9 +21,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -182,12 +182,12 @@ data class UnorderedList(val items: List<HTMLElement>) : HTMLElement() {
     override fun render() {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             items.forEach { item ->
-                Row {
+                Row(verticalAlignment = Alignment.Top) {
                     Text(
-                        text = "• ", // Bullet point
+                        text = "• ",
                         fontWeight = FontWeight.Bold,
                     )
-                    item.render()
+                    Box(modifier = Modifier.weight(1f)) { item.render() }
                 }
             }
         }
@@ -199,9 +199,9 @@ data class OrderedList(val items: List<HTMLElement>) : HTMLElement() {
     override fun render() {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             items.forEachIndexed { index, item ->
-                Row {
+                Row(verticalAlignment = Alignment.Top) {
                     Text("${index + 1}. ", fontWeight = FontWeight.Bold)
-                    item.render()
+                    Box(modifier = Modifier.weight(1f)) { item.render() }
                 }
             }
         }
@@ -383,25 +383,39 @@ data class UnsupportedHtml(val rawHtml: String) : HTMLElement() {
     @SuppressLint("SetJavaScriptEnabled")
     @Composable
     override fun render() {
-        Surface(modifier = Modifier.fillMaxWidth()) {
-            AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        webViewClient = WebViewClient() // Keeps navigation within WebView
-                        settings.javaScriptEnabled = true
-                        settings.mediaPlaybackRequiresUserGesture = false // Auto-play videos
-                        settings.cacheMode = WebSettings.LOAD_DEFAULT
-                        loadDataWithBaseURL(
-                            null,
-                            rawHtml,
-                            "text/html",
-                            "UTF-8",
-                            null
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        val fullHtml = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { margin: 0; padding: 0; background: #000; }
+                    iframe, video, embed { width: 100% !important; height: 100% !important; }
+                </style>
+            </head>
+            <body>$rawHtml</body>
+            </html>
+        """.trimIndent()
+        AndroidView(
+            factory = { context ->
+                WebView(context).apply {
+                    webViewClient = WebViewClient()
+                    settings.javaScriptEnabled = true
+                    settings.mediaPlaybackRequiresUserGesture = false
+                    settings.cacheMode = WebSettings.LOAD_DEFAULT
+                    settings.domStorageEnabled = true
+                    loadDataWithBaseURL(
+                        "https://www.youtube.com",
+                        fullHtml,
+                        "text/html",
+                        "UTF-8",
+                        null
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+        )
     }
 }
