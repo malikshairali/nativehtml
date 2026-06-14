@@ -21,10 +21,10 @@ import io.github.malikshairali.nativehtml.model.TextElement
 import io.github.malikshairali.nativehtml.model.UnorderedList
 import io.github.malikshairali.nativehtml.model.UnsupportedHtml
 import io.github.malikshairali.nativehtml.style.CssParser
-import io.github.malikshairali.nativehtml.style.StyleRegistry
+import io.github.malikshairali.nativehtml.NativeHTMLBuilder
 import org.jsoup.Jsoup
 
-class HTMLParser {
+class HTMLParser(private val builder: NativeHTMLBuilder = NativeHTMLBuilder()) {
     fun parse(html: String): List<HTMLElement> {
         val document = Jsoup.parse(html)
         return document.body().children().flatMap { parseElement(it) }
@@ -35,6 +35,11 @@ class HTMLParser {
         parentTextStyle: TextStyle = TextStyle()
     ): List<HTMLElement> {
         val tag = element.tagName()
+        
+        builder.customRenderers[tag]?.let { renderer ->
+            return listOf(renderer(element))
+        }
+
         val inlineCss = element.attr("style")
         val style = parentTextStyle.merge(getTextStyle(tag, inlineCss))
 
@@ -271,7 +276,7 @@ class HTMLParser {
 
     private fun getTextStyle(tag: String, css: String?): TextStyle {
         val styleFromCss = CssParser.parse(css)
-        val styleForTag = StyleRegistry.getStyle(tag)
-        return styleForTag.merge(styleFromCss)
+        val styleForTag = builder.styleRegistry.getStyle(tag)
+        return styleFromCss.merge(styleForTag)
     }
 }
