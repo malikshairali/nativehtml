@@ -6,18 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import io.github.malikshairali.nativehtml.RenderHtml
-import io.github.malikshairali.nativehtml.style.StyleRegistry
+import io.github.malikshairali.nativehtml.NativeHTML
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Override default styles
-        StyleRegistry.setStyle("h1", TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold))
-
         setContent {
-            RenderHtml(
+            NativeHTML(
                 html = """
                     <h1 style="color: red; font-size: 36px;">Heading 1</h1>
                     <h2 style="color: green;">Heading 2</h2>
@@ -92,7 +88,16 @@ class MainActivity : ComponentActivity() {
                     
                     <p>Mixed inline: <strong>bold</strong>, <em>italic</em>, <a href="https://example.com">link</a>, <sub>sub</sub>, <sup>sup</sup>.</p>
                     """.trimIndent()
-            )
+            ) {
+                // Example of using the new DSL to override styles globally
+                style("h1") {
+                    fontSize("34sp")
+                    fontWeight("bold")
+                }
+                
+                // You can also pass TextStyle directly if you prefer
+                // style("h2", TextStyle(fontSize = 28.sp, color = Color.Blue))
+            }
         }
     }
 }

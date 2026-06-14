@@ -8,7 +8,7 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration.Companion.Underline
 import androidx.compose.ui.unit.sp
 
-object StyleRegistry {
+class StyleRegistry {
     private val customStyles: MutableMap<String, TextStyle> = mutableMapOf()
 
     fun setStyle(tag: String, style: TextStyle) {
