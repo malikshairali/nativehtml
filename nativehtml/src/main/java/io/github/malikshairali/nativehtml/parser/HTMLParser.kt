@@ -22,16 +22,18 @@ import io.github.malikshairali.nativehtml.model.UnorderedList
 import io.github.malikshairali.nativehtml.model.UnsupportedHtml
 import io.github.malikshairali.nativehtml.style.CssParser
 import io.github.malikshairali.nativehtml.NativeHTMLBuilder
-import org.jsoup.Jsoup
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Element
+import com.fleeksoft.ksoup.nodes.TextNode
 
 class HTMLParser(private val builder: NativeHTMLBuilder = NativeHTMLBuilder()) {
     fun parse(html: String): List<HTMLElement> {
-        val document = Jsoup.parse(html)
+        val document = Ksoup.parse(html)
         return document.body().children().flatMap { parseElement(it) }
     }
 
     private fun parseElement(
-        element: org.jsoup.nodes.Element,
+        element: Element,
         parentTextStyle: TextStyle = TextStyle()
     ): List<HTMLElement> {
         val tag = element.tagName()
@@ -244,7 +246,7 @@ class HTMLParser(private val builder: NativeHTMLBuilder = NativeHTMLBuilder()) {
     }
 
     private fun parseChildren(
-        element: org.jsoup.nodes.Element,
+        element: Element,
         style: TextStyle = TextStyle()
     ): List<HTMLElement> {
         val children = mutableListOf<HTMLElement>()
@@ -252,14 +254,14 @@ class HTMLParser(private val builder: NativeHTMLBuilder = NativeHTMLBuilder()) {
         // Iterate through all child nodes (text + elements)
         element.childNodes().forEach { node ->
             when (node) {
-                is org.jsoup.nodes.TextNode -> {
+                is TextNode -> {
                     // Handle plain text nodes
                     if (node.text().isNotBlank()) {
                         children.add(TextElement(text = node.text(), style = style))
                     }
                 }
 
-                is org.jsoup.nodes.Element -> {
+                is Element -> {
                     // Recursively parse child elements
                     children.addAll(
                         parseElement(

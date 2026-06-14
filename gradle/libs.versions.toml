@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.0.0"
 agp = "8.4.1"
-jsoup = "1.18.3"
+ksoup = "0.2.0"
 composeBom = "2024.12.01"
 activityCompose = "1.9.3"
 coil = "3.0.4"
@@ -13,7 +13,7 @@ compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = 
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 
 # HTML parsing
-jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 
 # Image Loading (Coil)
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }

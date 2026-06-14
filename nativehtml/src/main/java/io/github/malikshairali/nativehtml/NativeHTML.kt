@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import io.github.malikshairali.nativehtml.model.HTMLElement
+import com.fleeksoft.ksoup.nodes.Element as KsoupElement
 import io.github.malikshairali.nativehtml.parser.HTMLParser
 import io.github.malikshairali.nativehtml.style.CssStyleBuilder
 import io.github.malikshairali.nativehtml.style.StyleRegistry
@@ -21,7 +22,7 @@ import io.github.malikshairali.nativehtml.style.css
 
 class NativeHTMLBuilder {
     internal val styleRegistry = StyleRegistry()
-    internal val customRenderers = mutableMapOf<String, (org.jsoup.nodes.Element) -> HTMLElement>()
+    internal val customRenderers = mutableMapOf<String, (KsoupElement) -> HTMLElement>()
 
     fun style(tag: String, style: TextStyle) {
         styleRegistry.setStyle(tag, style)
@@ -31,7 +32,7 @@ class NativeHTMLBuilder {
         styleRegistry.setStyle(tag, css(build))
     }
 
-    fun customTag(tag: String, renderer: (org.jsoup.nodes.Element) -> HTMLElement) {
+    fun customTag(tag: String, renderer: (KsoupElement) -> HTMLElement) {
         customRenderers[tag] = renderer
     }
 }
