@@ -38,6 +38,6 @@ dependencies {
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(libs.androidx.material3)
-    implementation(libs.ksoup)
+    api(libs.ksoup)
     implementation(libs.bundles.coil)
 }

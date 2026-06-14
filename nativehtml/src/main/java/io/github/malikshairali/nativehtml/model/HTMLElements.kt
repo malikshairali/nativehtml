@@ -75,6 +75,7 @@ private fun RenderAnnotatedText(
             modifier = modifier
         )
     } else {
+        @Suppress("DEPRECATION")
         ClickableText(
             text = annotatedText,
             style = style,
