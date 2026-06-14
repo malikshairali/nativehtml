@@ -9,6 +9,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 internal object CssParser {
     fun parse(css: String?): TextStyle {
@@ -29,6 +30,7 @@ internal object CssParser {
                     "font-style" -> fontStyle(value)
                     "text-align" -> textAlign(value)
                     "background-color" -> background(value)
+                    "background" -> background(value)
                     "text-decoration" -> textDecoration(value)
                     "line-height" -> lineHeight(value)
                     "font-family" -> fontFamily(value)
@@ -70,11 +72,31 @@ internal object CssParser {
         else -> TextAlign.Unspecified
     }
 
-    fun parseTextDecoration(value: String): TextDecoration? = when (value.trim().lowercase()) {
-        "underline" -> TextDecoration.Underline
-        "line-through" -> TextDecoration.LineThrough
-        "none" -> null
-        else -> null
+    fun parseTextDecoration(value: String): TextDecoration? {
+        val normalized = value.trim().lowercase()
+        if (normalized == "none") return null
+        val parts = normalized.split(Regex("\\s+")).filter { it.isNotBlank() }
+        var decoration: TextDecoration? = null
+
+        parts.forEach { part ->
+            when (part) {
+                "underline" -> {
+                    decoration = if (decoration == null) {
+                        TextDecoration.Underline
+                    } else {
+                        decoration!! + TextDecoration.Underline
+                    }
+                }
+                "line-through" -> {
+                    decoration = if (decoration == null) {
+                        TextDecoration.LineThrough
+                    } else {
+                        decoration!! + TextDecoration.LineThrough
+                    }
+                }
+            }
+        }
+        return decoration
     }
 
     fun parseFontFamily(value: String): FontFamily? = when (value.trim().lowercase()) {
@@ -96,6 +118,14 @@ internal object CssParser {
         val hex = value.removePrefix("#")
         return try {
             when (hex.length) {
+                3 -> {
+                    val expanded = hex.map { "$it$it" }.joinToString("")
+                    Color(expanded.toLong(16) or 0xFF000000)
+                }
+                4 -> {
+                    val expanded = hex.map { "$it$it" }.joinToString("")
+                    Color(expanded.toLong(16))
+                }
                 6 -> Color(hex.toLong(16) or 0xFF000000)
                 8 -> Color(hex.toLong(16))
                 else -> null
@@ -111,9 +141,19 @@ internal object CssParser {
             return Color(r.toInt(), g.toInt(), b.toInt())
         }
 
-        val rgbaRegex = Regex("""rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\s*\)""")
+        val rgbaRegex = Regex("""rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+%?)\s*\)""")
         rgbaRegex.matchEntire(value)?.destructured?.let { (r, g, b, a) ->
-            return Color(r.toInt(), g.toInt(), b.toInt(), (a.toFloat() * 255).toInt())
+            val alpha = if (a.endsWith("%")) {
+                ((a.removeSuffix("%").toFloatOrNull() ?: return null) / 100f)
+            } else {
+                a.toFloatOrNull() ?: return null
+            }
+            return Color(
+                red = r.toInt(),
+                green = g.toInt(),
+                blue = b.toInt(),
+                alpha = (alpha.coerceIn(0f, 1f) * 255).roundToInt()
+            )
         }
 
         return null
@@ -126,9 +166,16 @@ internal object CssParser {
         "blue" to Color.Blue,
         "green" to Color.Green,
         "gray" to Color.Gray,
+        "lightgray" to Color.LightGray,
+        "darkgray" to Color.DarkGray,
+        "transparent" to Color.Transparent,
         "yellow" to Color.Yellow,
+        "orange" to Color(0xFFFFA500),
+        "purple" to Color(0xFF800080),
+        "brown" to Color(0xFFA52A2A),
+        "teal" to Color(0xFF008080),
+        "navy" to Color(0xFF000080),
         "magenta" to Color.Magenta,
         "cyan" to Color.Cyan
-        // TODO: Add more named CSS colors here
     )
 }

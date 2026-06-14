@@ -33,10 +33,6 @@ android {
     }
 }
 
-signing {
-    useGpgCmd()
-}
-
 dependencies {
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)

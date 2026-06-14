@@ -1,5 +1,6 @@
 package io.github.malikshairali.nativehtmldemo
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,8 +29,11 @@ class MainActivity : ComponentActivity() {
                     <p style="text-align: right;"><em style="font-family: monospace; text-align: right">This is Italic and right aligned</em></p>
                     <a href="https://example.com" style="color: magenta; text-decoration: underline;">A link you can click on</a>,
                     <code>Some Inline Code</code>,
+                    <small>Small helper text</small>,
+                    <del>Deprecated label</del>
                     
                     <blockquote>This is a blockquote.</blockquote>
+                    <hr/>
                     
                     <p>Unordered list:</p>
                     <ul>
@@ -53,8 +57,8 @@ class MainActivity : ComponentActivity() {
                     <p>Here is a table:</p>
                     <table>
                         <tr>
-                            <td><strong>Header 1</strong></td>
-                            <td><strong>Header 2</strong></td>
+                            <th>Header 1</th>
+                            <th>Header 2</th>
                         </tr>
                         <tr>
                             <td>Cell 1</td>
@@ -76,6 +80,11 @@ class MainActivity : ComponentActivity() {
                             </td>
                         </tr>
                     </table>
+
+                    <pre>
+                        val parser = "nativehtml"
+                        println("Rendered by Compose")
+                    </pre>
                     
                     <p>Here is an image:</p>
                     <img src="https://fastly.picsum.photos/id/7/4728/3168.jpg?hmac=c5B5tfYFM9blHHMhuu4UKmhnbZoJqrzNOP9xjkV4w3o" alt="Image" />
@@ -91,7 +100,19 @@ class MainActivity : ComponentActivity() {
                     </div>
                     
                     <p>Mixed inline: <strong>bold</strong>, <em>italic</em>, <a href="https://example.com">link</a>, <sub>sub</sub>, <sup>sup</sup>.</p>
-                    """.trimIndent()
+                    """.trimIndent(),
+                onLinkClick = { url ->
+                    val uri = Uri.parse(url)
+                    val isAppDeepLink =
+                        uri.scheme == "nativehtml" || (uri.host == "example.com" && uri.path?.startsWith("/app/") == true)
+
+                    if (isAppDeepLink) {
+                        // Hook your own navigation/deep-link router here.
+                        true
+                    } else {
+                        false // Let NativeHTML fallback to ACTION_VIEW.
+                    }
+                }
             )
         }
     }
