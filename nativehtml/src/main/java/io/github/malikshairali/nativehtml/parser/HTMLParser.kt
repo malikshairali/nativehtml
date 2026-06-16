@@ -4,34 +4,44 @@ import androidx.compose.ui.text.TextStyle
 import io.github.malikshairali.nativehtml.model.Blockquote
 import io.github.malikshairali.nativehtml.model.Div
 import io.github.malikshairali.nativehtml.model.HTMLElement
+import io.github.malikshairali.nativehtml.model.HorizontalRule
 import io.github.malikshairali.nativehtml.model.Image
 import io.github.malikshairali.nativehtml.model.InlineCode
 import io.github.malikshairali.nativehtml.model.LineBreak
 import io.github.malikshairali.nativehtml.model.ListItem
 import io.github.malikshairali.nativehtml.model.OrderedList
 import io.github.malikshairali.nativehtml.model.Paragraph
+import io.github.malikshairali.nativehtml.model.PreformattedText
 import io.github.malikshairali.nativehtml.model.Span
 import io.github.malikshairali.nativehtml.model.Table
 import io.github.malikshairali.nativehtml.model.TableCell
+import io.github.malikshairali.nativehtml.model.TableHeaderCell
 import io.github.malikshairali.nativehtml.model.TableRow
 import io.github.malikshairali.nativehtml.model.TextElement
 import io.github.malikshairali.nativehtml.model.UnorderedList
 import io.github.malikshairali.nativehtml.model.UnsupportedHtml
 import io.github.malikshairali.nativehtml.style.CssParser
-import io.github.malikshairali.nativehtml.style.StyleRegistry
-import org.jsoup.Jsoup
+import io.github.malikshairali.nativehtml.NativeHTMLBuilder
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Element
+import com.fleeksoft.ksoup.nodes.TextNode
 
-class HTMLParser {
+class HTMLParser(private val builder: NativeHTMLBuilder = NativeHTMLBuilder()) {
     fun parse(html: String): List<HTMLElement> {
-        val document = Jsoup.parse(html)
+        val document = Ksoup.parse(html)
         return document.body().children().flatMap { parseElement(it) }
     }
 
     private fun parseElement(
-        element: org.jsoup.nodes.Element,
+        element: Element,
         parentTextStyle: TextStyle = TextStyle()
     ): List<HTMLElement> {
         val tag = element.tagName()
+        
+        builder.customRenderers[tag]?.let { renderer ->
+            return listOf(renderer(element))
+        }
+
         val inlineCss = element.attr("style")
         val style = parentTextStyle.merge(getTextStyle(tag, inlineCss))
 
@@ -78,7 +88,21 @@ class HTMLParser {
                 )
             )
 
+            "small" -> listOf(
+                TextElement(
+                    text = element.text(),
+                    style = style
+                )
+            )
+
             "u" -> listOf(
+                TextElement(
+                    text = element.text(),
+                    style = style
+                )
+            )
+
+            "s", "strike", "del" -> listOf(
                 TextElement(
                     text = element.text(),
                     style = style
@@ -106,7 +130,7 @@ class HTMLParser {
                 )
             )
 
-            "strong" -> listOf(
+            "b", "strong" -> listOf(
                 Span(
                     parseChildren(
                         element = element,
@@ -115,7 +139,7 @@ class HTMLParser {
                 )
             )
 
-            "em" -> listOf(
+            "i", "em" -> listOf(
                 Span(
                     parseChildren(
                         element = element,
@@ -140,6 +164,13 @@ class HTMLParser {
                 )
             )
 
+            "pre" -> listOf(
+                PreformattedText(
+                    text = element.wholeText(),
+                    style = style
+                )
+            )
+
             "span" -> listOf(
                 Span(
                     children = parseChildren(element, style),
@@ -161,7 +192,7 @@ class HTMLParser {
             "ol" -> listOf(OrderedList(element.children().flatMap { parseElement(it) }))
 
             "li" -> {
-                val children = parseChildren(element)
+                val children = parseChildren(element, style)
                 listOf(ListItem(children))
             }
 
@@ -175,27 +206,47 @@ class HTMLParser {
                 element.children().flatMap { parseElement(it) }
             }
 
+            "thead", "tfoot" -> {
+                element.children().flatMap { parseElement(it) }
+            }
+
             "tr" -> {
                 val cells =
-                    element.children().flatMap { parseElement(it) }.filterIsInstance<TableCell>()
+                    element.children().flatMap { parseElement(it) }.filter {
+                        it is TableCell || it is TableHeaderCell
+                    }
                 listOf(TableRow(cells))
             }
 
             "td" -> {
-                val children = parseChildren(element)
+                val children = parseChildren(element, style)
                 listOf(TableCell(children))
+            }
+
+            "th" -> {
+                val children = parseChildren(element, style)
+                listOf(TableHeaderCell(children))
             }
 
             "img" -> listOf(Image(element.attr("src"), element.attr("alt")))
 
-            "div" -> listOf(Div(parseChildren(element, style)))
+            "div", "section", "article", "header", "footer", "nav", "main" -> listOf(
+                Div(
+                    parseChildren(
+                        element,
+                        style
+                    )
+                )
+            )
+
+            "hr" -> listOf(HorizontalRule)
 
             else -> listOf(UnsupportedHtml(element.outerHtml())) // Unsupported tags
         }
     }
 
     private fun parseChildren(
-        element: org.jsoup.nodes.Element,
+        element: Element,
         style: TextStyle = TextStyle()
     ): List<HTMLElement> {
         val children = mutableListOf<HTMLElement>()
@@ -203,14 +254,14 @@ class HTMLParser {
         // Iterate through all child nodes (text + elements)
         element.childNodes().forEach { node ->
             when (node) {
-                is org.jsoup.nodes.TextNode -> {
+                is TextNode -> {
                     // Handle plain text nodes
                     if (node.text().isNotBlank()) {
                         children.add(TextElement(text = node.text(), style = style))
                     }
                 }
 
-                is org.jsoup.nodes.Element -> {
+                is Element -> {
                     // Recursively parse child elements
                     children.addAll(
                         parseElement(
@@ -225,9 +276,9 @@ class HTMLParser {
         return children
     }
 
-    private fun getTextStyle(tag: String, css: String?) : TextStyle {
+    private fun getTextStyle(tag: String, css: String?): TextStyle {
         val styleFromCss = CssParser.parse(css)
-        val styleForTag = StyleRegistry.getStyle(tag)
+        val styleForTag = builder.styleRegistry.getStyle(tag)
         return styleFromCss.merge(styleForTag)
     }
 }

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
     id("com.vanniktech.maven.publish") version "0.30.0"
+    id("signing")
 }
 
 android {
@@ -33,14 +34,10 @@ android {
     }
 }
 
-signing {
-    useGpgCmd()
-}
-
 dependencies {
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(libs.androidx.material3)
-    implementation(libs.jsoup)
+    api(libs.ksoup)
     implementation(libs.bundles.coil)
 }

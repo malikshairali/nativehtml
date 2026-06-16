@@ -5,10 +5,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle.Companion.Italic
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextDecoration.Companion.Underline
 import androidx.compose.ui.unit.sp
 
-object StyleRegistry {
+class StyleRegistry {
     private val customStyles: MutableMap<String, TextStyle> = mutableMapOf()
 
     fun setStyle(tag: String, style: TextStyle) {
@@ -30,10 +31,14 @@ object StyleRegistry {
             "u" -> TextStyle(textDecoration = Underline)
             "b", "strong" -> TextStyle(fontWeight = FontWeight.Bold)
             "em" -> TextStyle(fontStyle = Italic)
+            "s", "strike", "del" -> TextStyle(textDecoration = TextDecoration.LineThrough)
+            "small" -> TextStyle(fontSize = 12.sp)
             "sup" -> TextStyle(baselineShift = BaselineShift.Superscript)
             "sub" -> TextStyle(baselineShift = BaselineShift.Subscript)
-            "mark" -> TextStyle(color = Color.Yellow)
+            "mark" -> TextStyle(background = Color.Yellow)
+            "code", "pre" -> TextStyle(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             "a" -> TextStyle(color = Color.Blue, textDecoration = Underline)
+            "th" -> TextStyle(fontWeight = FontWeight.Bold)
             else -> TextStyle()
         }
     }

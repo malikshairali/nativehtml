@@ -1,14 +1,13 @@
 package io.github.malikshairali.nativehtml.model
 
 import android.annotation.SuppressLint
-import android.content.Intent
-import android.net.Uri
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -22,15 +21,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,13 +36,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withLink
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import io.github.malikshairali.nativehtml.LocalHtmlUrlClickHandler
+
+private const val URL_ANNOTATION_TAG = "URL"
 
 sealed class HTMLElement {
     @Composable
@@ -53,6 +55,44 @@ sealed class HTMLElement {
 
 interface InlineHTMLElement {
     fun appendToBuilder(builder: AnnotatedString.Builder)
+}
+
+@Composable
+private fun RenderAnnotatedText(
+    annotatedText: AnnotatedString,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    onUrlClick: (String) -> Unit
+) {
+    val hasLink = annotatedText.getStringAnnotations(
+        tag = URL_ANNOTATION_TAG,
+        start = 0,
+        end = annotatedText.length
+    ).isNotEmpty()
+
+    if (!hasLink) {
+        Text(
+            text = annotatedText,
+            style = style,
+            modifier = modifier
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        ClickableText(
+            text = annotatedText,
+            style = style,
+            modifier = modifier,
+            onClick = { offset ->
+                annotatedText.getStringAnnotations(
+                    tag = URL_ANNOTATION_TAG,
+                    start = offset,
+                    end = offset
+                ).firstOrNull()?.let { annotation ->
+                    onUrlClick(annotation.item)
+                }
+            }
+        )
+    }
 }
 
 data class TextElement(
@@ -67,16 +107,10 @@ data class TextElement(
             }
         } else {
             builder.apply {
-                val tag = "URL"
-                pushStringAnnotation(tag, href)
-                withLink(LinkAnnotation.Url(url = href)) {
-                    withStyle(
-                        SpanStyle(
-                            color = Color.Blue, textDecoration = TextDecoration.Underline
-                        )
-                    ) {
-                        append(text)
-                    }
+                pushStringAnnotation(URL_ANNOTATION_TAG, href)
+                val linkColor = if (style.color == Color.Unspecified) Color(0xFF1565C0) else style.color
+                withStyle(style.toSpanStyle().merge(SpanStyle(color = linkColor, textDecoration = style.textDecoration ?: TextDecoration.Underline))) {
+                    append(text)
                 }
                 pop()
             }
@@ -85,15 +119,14 @@ data class TextElement(
 
     @Composable
     override fun render() {
-        val context = LocalContext.current
+        val handleUrlClick = LocalHtmlUrlClickHandler.current
         Text(
             text = text,
             style = style,
             modifier = Modifier.then(
                 href?.let { url ->
                     Modifier.clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        context.startActivity(intent)
+                        handleUrlClick(url)
                     }
                 } ?: Modifier
             )
@@ -115,22 +148,28 @@ data class InlineCode(val text: String) : HTMLElement() {
 data class Blockquote(val text: String) : HTMLElement() {
     @Composable
     override fun render() {
+        val accentColor = Color(0xFF9E9E9E)
+        val strokeWidth = 4.dp
         Row(
             modifier = Modifier
-                .height(IntrinsicSize.Max)
-                .padding(vertical = 8.dp, horizontal = 16.dp)
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
+                .drawBehind {
+                    val sw = strokeWidth.toPx()
+                    drawLine(
+                        color = accentColor,
+                        start = Offset(sw / 2f, 0f),
+                        end = Offset(sw / 2f, size.height),
+                        strokeWidth = sw
+                    )
+                }
+                .padding(start = strokeWidth + 10.dp, end = 8.dp)
         ) {
-            Spacer(
-                modifier = Modifier
-                    .width(2.dp)
-                    .fillMaxHeight()
-                    .background(Color.LightGray)
-            )
             Text(
                 text = text,
                 fontStyle = FontStyle.Italic,
-                modifier = Modifier.padding(start = 8.dp),
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF555555)
             )
         }
     }
@@ -151,12 +190,12 @@ data class UnorderedList(val items: List<HTMLElement>) : HTMLElement() {
     override fun render() {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             items.forEach { item ->
-                Row {
+                Row(verticalAlignment = Alignment.Top) {
                     Text(
-                        text = "• ", // Bullet point
+                        text = "• ",
                         fontWeight = FontWeight.Bold,
                     )
-                    item.render()
+                    Box(modifier = Modifier.weight(1f)) { item.render() }
                 }
             }
         }
@@ -168,9 +207,9 @@ data class OrderedList(val items: List<HTMLElement>) : HTMLElement() {
     override fun render() {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             items.forEachIndexed { index, item ->
-                Row {
+                Row(verticalAlignment = Alignment.Top) {
                     Text("${index + 1}. ", fontWeight = FontWeight.Bold)
-                    item.render()
+                    Box(modifier = Modifier.weight(1f)) { item.render() }
                 }
             }
         }
@@ -205,7 +244,7 @@ data class Table(val rows: List<TableRow>) : HTMLElement() {
     }
 }
 
-data class TableRow(val cells: List<TableCell>) : HTMLElement() {
+data class TableRow(val cells: List<HTMLElement>) : HTMLElement() {
     @Composable
     override fun render() {
         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
@@ -229,22 +268,38 @@ data class TableCell(val children: List<HTMLElement>) : HTMLElement() {
     }
 }
 
+data class TableHeaderCell(val children: List<HTMLElement>) : HTMLElement() {
+    @Composable
+    override fun render() {
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .background(Color(0xFFF5F5F5))
+        ) {
+            children.forEach { it.render() }
+        }
+    }
+}
+
 data class Paragraph(
     val children: List<HTMLElement>,
     val style: TextStyle
 ) : HTMLElement() {
     @Composable
     override fun render() {
+        val handleUrlClick = LocalHtmlUrlClickHandler.current
         var textBuilder = AnnotatedString.Builder()
 
         children.forEach { child ->
             if (child is InlineHTMLElement) {
                 child.appendToBuilder(textBuilder)
             } else {
-                Text(
-                    text = textBuilder.toAnnotatedString(),
+                val annotated = textBuilder.toAnnotatedString()
+                RenderAnnotatedText(
+                    annotatedText = annotated,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    style = style
+                    style = style,
+                    onUrlClick = handleUrlClick
                 )
                 child.render()
                 textBuilder = AnnotatedString.Builder()
@@ -252,10 +307,12 @@ data class Paragraph(
         }
 
         if (textBuilder.length != 0) {
-            Text(
-                text = textBuilder.toAnnotatedString(),
+            val annotated = textBuilder.toAnnotatedString()
+            RenderAnnotatedText(
+                annotatedText = annotated,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                style = style
+                style = style,
+                onUrlClick = handleUrlClick
             )
         }
     }
@@ -275,15 +332,18 @@ data class Span(
 
     @Composable
     override fun render() {
-        Text(
-            text = buildAnnotatedString {
-                children.forEach { child ->
-                    if (child is InlineHTMLElement) {
-                        child.appendToBuilder(this)
-                    }
+        val handleUrlClick = LocalHtmlUrlClickHandler.current
+        val annotated = buildAnnotatedString {
+            children.forEach { child ->
+                if (child is InlineHTMLElement) {
+                    child.appendToBuilder(this)
                 }
-            },
-            style = style
+            }
+        }
+        RenderAnnotatedText(
+            annotatedText = annotated,
+            style = style,
+            onUrlClick = handleUrlClick
         )
     }
 }
@@ -300,30 +360,70 @@ data class Div(val children: List<HTMLElement>) : HTMLElement() {
     }
 }
 
+data object HorizontalRule : HTMLElement() {
+    @Composable
+    override fun render() {
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color.LightGray)
+        )
+    }
+}
+
+data class PreformattedText(val text: String, val style: TextStyle) : HTMLElement() {
+    @Composable
+    override fun render() {
+        Text(
+            text = text,
+            style = style,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF5F5F5))
+                .padding(8.dp)
+        )
+    }
+}
+
 
 data class UnsupportedHtml(val rawHtml: String) : HTMLElement() {
     @SuppressLint("SetJavaScriptEnabled")
     @Composable
     override fun render() {
-        Surface(modifier = Modifier.fillMaxWidth()) {
-            AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        webViewClient = WebViewClient() // Keeps navigation within WebView
-                        settings.javaScriptEnabled = true
-                        settings.mediaPlaybackRequiresUserGesture = false // Auto-play videos
-                        settings.cacheMode = WebSettings.LOAD_DEFAULT
-                        loadDataWithBaseURL(
-                            null,
-                            rawHtml,
-                            "text/html",
-                            "UTF-8",
-                            null
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        val fullHtml = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { margin: 0; padding: 0; background: #000; }
+                    iframe, video, embed { width: 100% !important; height: 100% !important; }
+                </style>
+            </head>
+            <body>$rawHtml</body>
+            </html>
+        """.trimIndent()
+        AndroidView(
+            factory = { context ->
+                WebView(context).apply {
+                    webViewClient = WebViewClient()
+                    settings.javaScriptEnabled = true
+                    settings.mediaPlaybackRequiresUserGesture = false
+                    settings.cacheMode = WebSettings.LOAD_DEFAULT
+                    settings.domStorageEnabled = true
+                    loadDataWithBaseURL(
+                        "https://www.youtube.com",
+                        fullHtml,
+                        "text/html",
+                        "UTF-8",
+                        null
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+        )
     }
 }
